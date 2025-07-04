@@ -1,0 +1,26 @@
+{
+  "name": "taskflow-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matiassbenitez/TaskFlow-API.git"
+  },
+  "author": "Matías Sebastián Benítez",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/matiassbenitez/TaskFlow-API/issues"
+  },
+  "homepage": "https://github.com/matiassbenitez/TaskFlow-API#readme",
+  "description": "",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.0.1",
+    "express": "^5.1.0",
+    "mysql": "^2.18.1"
+  }
+}
