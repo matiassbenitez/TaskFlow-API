@@ -23,47 +23,44 @@ const taskController ={
     }
   },
   
-  createTask: (req, res) => {
-    const { title, description } = req.body
-    const sql = 'INSERT INTO task (title, description) VALUES (?, ?)'
-    pool.query(sql, [title, description], (err, result) => {
-      if (err) {
-        console.error('Error creating task:', err)
-        return res.status(500).json({ error: 'Internal Server Error' })
-      }
-      res.status(201).json({ id: result.insertId, title, description })
-    })
+  createTask: async (req, res) => {
+    const {title, description } = req.body
+    try {
+      const newTask = await taskModel.createTask(title, description)
+      res.status(201).json(newTask)
+    } catch (err) {
+      console.error('Error creating task:', err)
+      res.status(500).json({ error: 'Internal Server Error' })
+    }
   },
 
-  updateTask: (req, res) => {
+  updateTask: async (req, res) => {
     const { id } = req.params
     const { title, description, done } = req.body
-    const sql = 'UPDATE task SET title = ?, description = ?, done = ? WHERE id = ?'
-    pool.query(sql, [title, description, done, id], (err, result) => {
-      if (err) {
-        console.error('Error updating task:', err)
-        return res.status(500).json({ error: 'Internal Server Error' })
-      }
-      if (result.affectedRows === 0) {
+    try {
+      const updatedTask = await taskModel.updateTask(id, title, description, done)
+      if (!updatedTask) {
         return res.status(404).json({ error: 'Task not found' })
       }
-      res.json({ id, title, description, done })
-    })
+      res.json(updatedTask)
+    }catch (err) {
+      console.error('Error updating task:', err)
+      res.status(500).json({ error: 'Internal Server Error' })
+    }
   },
 
-  deleteTask: (req, res) => {
+  deleteTask: async (req, res) => {
     const { id } = req.params
-    const sql = 'DELETE FROM task WHERE id = ?'
-    pool.query(sql, [id], (err, result) => {
-      if (err) {
-        console.error('Error deleting task:', err)
-        return res.status(500).json({ error: 'Internal Server Error' })
-      }
-      if (result.affectedRows === 0) {
+    try {
+      const deletedTask = await taskModel.deleteTask(id)
+      if (!deletedTask) {
         return res.status(404).json({ error: 'Task not found' })
       }
-      res.status(204).send()
-    })
+      res.json({ message: 'Task deleted successfully' })
+    } catch (err) {
+      console.error('Error deleting task:', err)
+      res.status(500).json({ error: 'Internal Server Error' })
+    }
   }
 }
 
