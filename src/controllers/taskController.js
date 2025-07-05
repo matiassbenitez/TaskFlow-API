@@ -1,5 +1,6 @@
 import pool from '../config/db.js'
 import taskModel from '../models/taskModel.js'
+import { validationResult } from 'express-validator'
 
 const taskController ={
   getAllTasks: async (req, res) => {
@@ -24,6 +25,11 @@ const taskController ={
   },
   
   createTask: async (req, res) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array()})
+    }
+    
     const {title, description } = req.body
     try {
       const newTask = await taskModel.createTask(title, description)
@@ -35,6 +41,11 @@ const taskController ={
   },
 
   updateTask: async (req, res) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array()})
+    }
+    
     const { id } = req.params
     const { title, description, done } = req.body
     try {
