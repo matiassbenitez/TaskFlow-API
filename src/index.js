@@ -1,15 +1,20 @@
 import express from 'express'
 import dotenv from 'dotenv'
-import db from './db.js'
-import taskRoutes from './routes/task.js'
-import createTaskTable from './models/taskModel.js'
+import taskRoutes from './routes/taskRoutes.js'
+import taskModel from './models/taskModel.js'
+import requestLogger from './middleware/logger.js'
+import cors from 'cors'
+import helmet from 'helmet'
 
 const app = express()
 dotenv.config()
 
 const port = process.env.PORT
-createTaskTable()
+taskModel.createTaskTable()
+app.use(cors())
+app.use(helmet())
 app.use(express.json())
+app.use(requestLogger)
 app.get('/', (req,res) => {
   res.send('Hello World!')
 })
