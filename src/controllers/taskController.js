@@ -1,4 +1,3 @@
-import pool from '../config/db.js'
 import taskModel from '../models/taskModel.js'
 import { validationResult } from 'express-validator'
 
