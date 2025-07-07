@@ -2,12 +2,18 @@
 
 A simple RESTful API built with **Node.js**, **Express**, and **MySQL** to manage tasks with basic CRUD operations.
 
+Now deployed on [Railway](https://railway.app).
+
+---
+
 ## 📦 Tech Stack
 
 - Node.js
 - Express
 - MySQL
 - Express Validator
+- Railway (Deployment)
+- dotenv
 
 ---
 
@@ -33,29 +39,124 @@ Create a `.env` file in the root of the project with the following content:
 ```env
 PORT=3000
 DB_URI=mysql://user:password@localhost:3306/taskflow
+JWT_SECRET=your-secret-key
+NODE_ENV=development
+CORS_ORIGIN=http://localhost:5173
 ```
 
 > Make sure your MySQL server is running and a `task` table exists in your `taskflow` database.
-
+❌ Never commit your .env file. Only .env.example should be tracked in version control.
 ### ▶️ Run the app
 
 ```bash
 npm run start
 ```
+The server will be available at: http://localhost:3000
 
 ---
 
-## 📚 API Endpoints
+### ☁️ Deployment (Railway)
 
-All endpoints are prefixed with `/tasks`
+To deploy this app to Railway:
+
+Push this repo to GitHub.
+
+Create a new project in Railway > Deploy from GitHub.
+
+Add your environment variables (DB_URI, PORT, JWT_SECRET, CORS_ORIGIN) in the Variables section.
+
+(Optional) Add the MySQL plugin if you want to use Railway’s managed database.
+
+Railway will automatically detect the start script and deploy your app.
+
+After deployment, your API will be available at a URL like:
+https://taskflow-api.up.railway.app
 
 ---
 
-### ✅ `GET /tasks`
+# 📚 API Endpoints
 
-Returns all tasks.
+> Todos los endpoints bajo `/tasks` requieren autenticación mediante JWT.  
+> Los endpoints de `/auth` son públicos.
 
-**Response:**
+---
+
+## 🔐 Auth Endpoints
+
+### 📝 `POST /auth/register`
+
+Register a new user.
+
+**Request Body:**
+```json
+{
+  "username": "testuser",
+  "email": "test@test.com",
+  "password": "testpassword"
+}
+```
+
+**Validaciones:**
+- `email`: required, must be a valid email.
+- `password`: minimum 6 characters.
+
+**Response (201):**
+```json
+{
+  "id": 1,
+  "email": "test@test.com"
+}
+```
+
+**Error (400 - email already registered):**
+```json
+{ "error": "User already exists" }
+```
+
+---
+
+### 🔐 `POST /auth/login`
+
+Log in and return a JWT token.
+
+**Request Body:**
+```json
+{
+  "email": "test@test.com",
+  "password": "testpassword"
+}
+```
+
+**Response (200):**
+```json
+{
+  "token": "jwt_token_here",
+  "user": {
+    "id": 1,
+    "email": "test@test.com"
+  }
+}
+```
+
+**Error (401 - incorrect credentials):**
+```json
+{ "error": "Invalid email or password" }
+```
+
+---
+
+## ✅ Task Endpoints
+
+> All `/tasks` endpoints require the header:  
+> `Authorization: Bearer <token>`
+
+---
+
+### 📋 `GET /tasks`
+
+Returns all tasks for the authenticated user.
+
+**Response (200):**
 ```json
 [
   {
@@ -71,7 +172,7 @@ Returns all tasks.
 
 ### 🔍 `GET /tasks/:id`
 
-Returns a task by ID.
+Returns a task by its ID.Devuelve una tarea por su ID.
 
 **Response (200):**
 ```json
@@ -83,36 +184,42 @@ Returns a task by ID.
 }
 ```
 
-**Response (404):**
+**Error (400 - invalid ID):**
+```json
+{ "error": "Invalid task ID" }
+```
+
+**Error (404 - not flound):**
 ```json
 { "error": "Task not found" }
 ```
 
 ---
 
-### 📝 `POST /tasks`
+### ➕ `POST /tasks`
 
-Creates a new task.
+Create a new task.
 
 **Request Body:**
 ```json
 {
   "title": "Do laundry",
-  "description": "Wash white clothes separately",
+  "description": "Separate white clothes",
   "done": true
 }
 ```
 
-**Validation Rules:**
+**Validaciones:**
 - `title`: required, minimum 3 characters.
-- `done`: optional, must be boolean if present.
+- `description`: required.
+- `done`: optional, boolean.
 
-**Success (201):**
+**Response (201):**
 ```json
 {
   "id": 2,
   "title": "Do laundry",
-  "description": "Wash white clothes separately",
+  "description": "Separate white clothes",
   "done": true
 }
 ```
@@ -131,31 +238,36 @@ Creates a new task.
 }
 ```
 
+**Error (400 - Description missing):**
+```json
+{ "error": "Description is required" }
+```
+
 ---
 
 ### ✏️ `PUT /tasks/:id`
 
-Updates a task by ID.
+Updates a task by its ID.
 
 **Request Body:**
 ```json
 {
   "title": "Do laundry and ironing",
-  "description": "Include ironing the shirts",
+  "description": "Include ironing shirts",
   "done": false
 }
 ```
 
-**Validation Rules:**
+**Validaciones:**
 - `title`: required, minimum 3 characters.
-- `done`: optional, must be boolean if present.
+- `done`: optional, boolean.
 
-**Success (200):**
+**Response (200):**
 ```json
 {
   "id": 2,
   "title": "Do laundry and ironing",
-  "description": "Include ironing the shirts",
+  "description": "Include ironing shirts",
   "done": false
 }
 ```
@@ -169,9 +281,9 @@ Updates a task by ID.
 
 ### 🗑️ `DELETE /tasks/:id`
 
-Deletes a task by ID.
+Deletes a task by its ID.
 
-**Success (200):**
+**Response (200):**
 ```json
 { "message": "Task deleted successfully" }
 ```
@@ -183,13 +295,33 @@ Deletes a task by ID.
 
 ---
 
+## ⚠️ Auth Middleware (Protección JWT)
+
+All `/tasks` endpoints use a middleware that validates the JWT token.
+
+**Required header:**
+```
+Authorization: Bearer <token>
+```
+
+**Common errors:**
+
+| Status | Cause                         | Response                             |
+|--------|-------------------------------|--------------------------------------|
+| 401    | No token provided             | `{ "error": "No token provided or invalid format" }` |
+| 403    | Invalid or expired token      | `{ "error": "Invalid or expired token" }` |
+
+---
+
 ## ❗ Error Responses
 
-| Code | Meaning            | Description                            |
-|------|--------------------|----------------------------------------|
-| 400  | Bad Request        | Validation failed                      |
-| 404  | Not Found          | Task not found with given ID           |
-| 500  | Internal Server Error | Something went wrong on the server |
+| Code   | Meaning                  | Cause                                |
+|--------|--------------------------|--------------------------------------|
+| 400    | Bad Request              | Validation error or missing data     |
+| 401    | Unauthorized             | No token provided or invalid format  |
+| 403    | Forbidden                | Invalid or expired token             |
+| 404    | Not Found                | Resource not found                   |
+| 500    | Internal Server Error    | Server error                         |
 
 ---
 
