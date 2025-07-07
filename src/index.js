@@ -24,6 +24,4 @@ app.get('/', (req,res) => {
 app.use('/tasks', taskRoutes)
 app.use('/auth', authRoutes)
 
-app.listen(port, () => {
-  console.log(`TaskFlow-API listening at http://localhost:${port}`)
-})
+export default app

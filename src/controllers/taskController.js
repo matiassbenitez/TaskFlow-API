@@ -15,7 +15,13 @@ const taskController ={
   getTaskById: async (req, res) => {
     try {
       const { id } = req.params
+      if (isNaN(id)) {
+        return res.status(400).json({ error: 'Invalid task ID' })
+      }
       const task = await taskModel.getTaskById(id)
+      if (!task) {
+        return res.status(404).json({ error: 'Task not found' })
+      }
       res.json(task)
     } catch (err) {
       console.error('Error fetching task:', err)
@@ -30,6 +36,12 @@ const taskController ={
     }
     
     const {title, description } = req.body
+    if (!title) {
+      return res.status(400).json({ error: 'Title is required' })
+    }
+      if (!description){
+      return res.status(400).json({ error: 'Description is required' })
+    }
     try {
       const newTask = await taskModel.createTask(title, description)
       res.status(201).json(newTask)

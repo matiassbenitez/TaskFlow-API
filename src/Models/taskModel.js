@@ -48,7 +48,7 @@ const taskModel ={
     try {
       const [results] = await pool.query(sql, [id])
       if (results.length === 0) {
-        throw new Error('Task not found')
+        return null
       }
       return results[0]
     } catch (err) {
