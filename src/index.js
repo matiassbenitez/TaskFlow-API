@@ -12,11 +12,9 @@ const app = express()
 dotenv.config()
 
 const port = process.env.PORT
-taskModel.createTaskTable()
-userModel.createUserTable()
 app.use(express.json())
 const allowedOrigins = [
-  `http://localhost:${process.env.PORT}`, // desarrollo local
+  `http://localhost:${port}`, // desarrollo local
   process.env.CORS_ORIGIN  // dominio frontend en producción (desde .env)
 ]
 
@@ -41,3 +39,12 @@ app.use('/tasks', taskRoutes)
 app.use('/auth', authRoutes)
 
 export default app
+
+export async function initTables() {
+  try {
+    await userModel.createUserTable()
+    await taskModel.createTaskTable()
+  } catch (err) {
+    console.error("❌ Error al inicializar tablas:", err)
+  }
+}
