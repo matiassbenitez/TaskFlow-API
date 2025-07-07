@@ -35,6 +35,9 @@ app.use(requestLogger)
 app.get('/', (req,res) => {
   res.send('TaskFlow-API is running!')
 })
+app.get('/health', (req, res) => {
+  res.sendStatus(200)
+})
 app.use('/tasks', taskRoutes)
 app.use('/auth', authRoutes)
 

@@ -1,15 +1,24 @@
-import app, { initTables } from './index.js'
+import app from './index.js'
 import dotenv from 'dotenv'
+import taskModel from './models/taskModel.js'
+import userModel from './models/userModel.js'
 
 dotenv.config()
 
-const port = process.env.PORT || 3000
+const PORT = process.env.PORT || 3000
 
+async function startServer() {
+  try {
+    await userModel.createUserTable()
+    await taskModel.createTaskTable()
 
-initTables().then(() => {
-  app.listen(port, () => {
-    console.log(`TaskFlow-API corriendo en http://localhost:${port}`)
-  })
-}).catch((err) => {
-  console.error("❌ No se pudo iniciar el servidor:", err)
-})
+    app.listen(PORT, () => {
+      console.log(`🚀 TaskFlow-API corriendo en http://localhost:${PORT}`)
+    })
+  } catch (err) {
+    console.error('❌ Error iniciando el servidor:', err)
+    process.exit(1)
+  }
+}
+
+startServer()
